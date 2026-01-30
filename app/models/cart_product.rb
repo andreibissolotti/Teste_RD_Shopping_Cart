@@ -4,4 +4,8 @@ class CartProduct < ApplicationRecord
 
   validates_presence_of :quantity
   validates_numericality_of :quantity, greater_than: 0
+
+  def total_price
+    self.quantity * self.product.price
+  end
 end

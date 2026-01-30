@@ -34,4 +34,13 @@ RSpec.describe CartProduct, type: :model do
       expect(cart_product).to belong_to(:product)
     end
   end
+
+  describe '#total_price' do
+    it 'returns the product price times quantity' do
+      product = Product.create!(name: "Sample", price: 9.99)
+      cart = Cart.create!
+      cart_product = described_class.new(product: product, cart: cart, quantity: 3)
+      expect(cart_product.total_price).to eq(9.99 * 3)
+    end
+  end
 end
