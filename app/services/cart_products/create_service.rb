@@ -25,7 +25,7 @@ module CartProducts
     def validate_params(params)
       raise MissingParameterError, "params" if params.blank?
 
-      params = params.deep_symbolize_keys
+      params = params.to_h.deep_symbolize_keys
 
       raise MissingParameterError, "quantity" if params[:quantity].blank?
       raise MissingParameterError, "product_id" if params[:product_id].blank?

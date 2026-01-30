@@ -28,13 +28,14 @@ RSpec.describe Carts::CreateService do
         expect(result[:cart].total_price).to eq(result[:cart_product].total_price)
       end
 
-      it 'returns hash with cart, cart_product and empty errors' do
+      it 'returns hash with cart, cart_product, empty errors and status' do
         result = described_class.call(valid_params)
 
-        expect(result).to include(:cart, :cart_product, :errors)
+        expect(result).to include(:cart, :cart_product, :errors, :status)
         expect(result[:cart]).to be_a(Cart)
         expect(result[:cart]).to be_persisted
         expect(result[:errors]).to eq([])
+        expect(result[:status]).to eq(:created)
       end
     end
 
@@ -43,9 +44,9 @@ RSpec.describe Carts::CreateService do
         expect { described_class.call(nil) }.not_to change(Cart, :count)
       end
 
-      it 'returns hash with errors' do
+      it 'returns hash with errors and status' do
         result = described_class.call(nil)
-        expect(result).to eq(errors: ['Parâmetro: params é obrigatório'])
+        expect(result).to eq(errors: ['Parâmetro: params é obrigatório'], status: :unprocessable_entity)
       end
     end
 
@@ -56,9 +57,10 @@ RSpec.describe Carts::CreateService do
         expect { described_class.call(invalid_params) }.not_to change(Cart, :count)
       end
 
-      it 'returns hash with errors' do
+      it 'returns hash with errors and status' do
         result = described_class.call(invalid_params)
         expect(result[:errors]).to include('Parâmetro: product_id é obrigatório')
+        expect(result[:status]).to eq(:unprocessable_entity)
       end
     end
 
@@ -69,9 +71,10 @@ RSpec.describe Carts::CreateService do
         expect { described_class.call(invalid_params) }.not_to change(Cart, :count)
       end
 
-      it 'returns hash with errors' do
+      it 'returns hash with errors and status' do
         result = described_class.call(invalid_params)
         expect(result[:errors]).to include('Parâmetro: quantity é obrigatório')
+        expect(result[:status]).to eq(:unprocessable_entity)
       end
     end
 
@@ -82,10 +85,11 @@ RSpec.describe Carts::CreateService do
         expect { described_class.call(invalid_params) }.not_to change(Cart, :count)
       end
 
-      it 'returns hash with errors' do
+      it 'returns hash with errors and status' do
         result = described_class.call(invalid_params)
         expect(result[:errors]).not_to be_empty
         expect(result[:errors].first).to match(/Record not found|Couldn't find Product/i)
+        expect(result[:status]).to eq(:not_found)
       end
     end
 
@@ -96,9 +100,10 @@ RSpec.describe Carts::CreateService do
         expect { described_class.call(invalid_params) }.not_to change(Cart, :count)
       end
 
-      it 'returns hash with errors' do
+      it 'returns hash with errors and status' do
         result = described_class.call(invalid_params)
         expect(result[:errors]).not_to be_empty
+        expect(result[:status]).to eq(:unprocessable_entity)
       end
     end
   end
