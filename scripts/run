@@ -1,0 +1,49 @@
+#!/usr/bin/env bash
+
+source "$(dirname "${BASH_SOURCE[0]}")/common.sh"
+cd "$WORKDIR"
+
+# Atalhos: comando → comando completo no container
+case "${1:-}" in
+  setup)
+    shift
+    set -- bin/setup "$@"
+    ;;
+  console)
+    shift
+    set -- bundle exec rails console "$@"
+    ;;
+  bash)
+    shift
+    set -- bash "$@"
+    ;;
+  rspec)
+    shift
+    set -- bundle exec rspec "$@"
+    ;;
+  rails)
+    shift
+    set -- bundle exec rails "$@"
+    ;;
+  rake)
+    shift
+    set -- bundle exec rake "$@"
+    ;;
+  bash|sh)
+    shell="${1}"
+    shift
+    if [[ $# -eq 0 ]]; then
+      exec $DOCKER_COMPOSE run --rm web "$shell"
+    else
+      exec $DOCKER_COMPOSE run --rm web "$shell" -c "$*"
+    fi
+    ;;
+esac
+
+# Sem argumentos → inicia a aplicação
+if [[ $# -eq 0 ]]; then
+  exec $DOCKER_COMPOSE up web
+fi
+
+# Executa o comando no container web
+exec $DOCKER_COMPOSE run --rm web "$@"

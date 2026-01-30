@@ -27,7 +27,7 @@ services:
             - db
             - redis 
         environment:
-            - DATABASE_URL=postgresql://postgres:password@db:5432/myapp_test
+            - DATABASE_URL=postgresql://postgres:password@db:5432/myapp
             - REDIS_URL=redis://redis:6379/0
     test:
         build: .
