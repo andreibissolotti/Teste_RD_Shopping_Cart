@@ -7,10 +7,18 @@ cd "$WORKDIR"
 case "${1:-}" in
   setup)
     shift
-    # Dev: bin/setup no container web; depois test: db:prepare no container test
+    
+    echo "== Parando containers existentes =="
+    $DOCKER_COMPOSE down
+    
+    echo "== Reconstruindo imagens =="
+    $DOCKER_COMPOSE build --no-cache
+    
+    echo "== Iniciando setup no container web =="
     $DOCKER_COMPOSE run --rm web bin/setup "$@"
+    
     echo ""
-    echo "== Preparing test database (container test) =="
+    echo "== Preparando banco de dados de teste =="
     exec $DOCKER_COMPOSE run --rm test bundle exec rails db:prepare
     ;;
   console)
