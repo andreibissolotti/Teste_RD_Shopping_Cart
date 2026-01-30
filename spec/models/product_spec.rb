@@ -20,4 +20,16 @@ RSpec.describe Product, type: :model do
       expect(product.errors[:price]).to include("must be greater than or equal to 0")
     end
   end
+
+  describe 'associations' do
+    it 'has many cart_products' do
+      product = described_class.new
+      expect(product.cart_products).to be_a(ActiveRecord::Relation)
+    end
+
+    it 'has many carts' do
+      product = described_class.new
+      expect(product.carts).to be_a(ActiveRecord::Relation)
+    end
+  end
 end

@@ -26,4 +26,16 @@ RSpec.describe Cart, type: :model do
       expect { shopping_cart.remove_if_abandoned }.to change { Cart.count }.by(-1)
     end
   end
+
+  describe 'associations' do
+    it 'has many cart_products' do
+      cart = described_class.new
+      expect(cart.cart_products).to be_a(ActiveRecord::Relation)
+    end
+
+    it 'has many products' do
+      cart = described_class.new
+      expect(cart.products).to be_a(ActiveRecord::Relation)
+    end
+  end
 end

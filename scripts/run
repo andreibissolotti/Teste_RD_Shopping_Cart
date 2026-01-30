@@ -7,7 +7,11 @@ cd "$WORKDIR"
 case "${1:-}" in
   setup)
     shift
-    set -- bin/setup "$@"
+    # Dev: bin/setup no container web; depois test: db:prepare no container test
+    $DOCKER_COMPOSE run --rm web bin/setup "$@"
+    echo ""
+    echo "== Preparing test database (container test) =="
+    exec $DOCKER_COMPOSE run --rm test bundle exec rails db:prepare
     ;;
   console)
     shift
@@ -45,5 +49,10 @@ if [[ $# -eq 0 ]]; then
   exec $DOCKER_COMPOSE up web
 fi
 
-# Executa o comando no container web
-exec $DOCKER_COMPOSE run --rm web "$@"
+# RSpec usa o serviço test (DATABASE_URL=myapp_test); demais comandos usam web
+SERVICE=web
+if [[ "${1:-}" == "bundle" && "${2:-}" == "exec" && "${3:-}" == "rspec" ]]; then
+  SERVICE=test
+fi
+
+exec $DOCKER_COMPOSE run --rm $SERVICE "$@"
