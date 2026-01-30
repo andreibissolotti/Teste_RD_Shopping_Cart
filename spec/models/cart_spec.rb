@@ -38,4 +38,11 @@ RSpec.describe Cart, type: :model do
       expect(cart.products).to be_a(ActiveRecord::Relation)
     end
   end
+
+  describe 'should set default numerical value to total_price' do
+    it 'on creation' do
+      cart = described_class.create
+      expect(cart.total_price).to eq(0)
+    end
+  end
 end
