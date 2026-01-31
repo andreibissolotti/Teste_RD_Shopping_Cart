@@ -1,6 +1,41 @@
 require 'rails_helper'
 
 RSpec.describe "/cart", type: :request do
+  describe "GET /cart" do
+    context 'when cart exists in session' do
+      let(:product) { create(:product, name: "Produto A", price: 10.0) }
+
+      before do
+        post '/cart', params: { product_id: product.id, quantity: 2 }, as: :json
+        get '/cart'
+      end
+
+      it 'returns status 200' do
+        expect(response).to have_http_status(:ok)
+      end
+
+      it 'returns cart with expected structure' do
+        json = response.parsed_body
+        expect(json).to include('id', 'products', 'total_price')
+        expect(json['products'].size).to eq(1)
+        expect(json['total_price']).to eq(20.0)
+      end
+    end
+
+    context 'when no cart in session' do
+      before { get '/cart' }
+
+      it 'returns status 404' do
+        expect(response).to have_http_status(:not_found)
+      end
+
+      it 'returns error message' do
+        json = response.parsed_body
+        expect(json['errors']).to include('Carrinho não encontrado')
+      end
+    end
+  end
+
   describe "POST /cart" do
     let(:product) { create(:product, name: "Produto Teste", price: 1.99) }
 
@@ -82,21 +117,160 @@ RSpec.describe "/cart", type: :request do
         expect(json['errors']).to be_present
       end
     end
+
+    context 'when adding second product to same cart (session reuse)' do
+      let(:product_b) { create(:product, name: "Produto B", price: 5.0) }
+
+      before do
+        post '/cart', params: { product_id: product.id, quantity: 2 }, as: :json
+        post '/cart', params: { product_id: product_b.id, quantity: 1 }, as: :json
+      end
+
+      it 'returns status 201' do
+        expect(response).to have_http_status(:created)
+      end
+
+      it 'returns cart with two products' do
+        json = response.parsed_body
+        expect(json['products'].size).to eq(2)
+        expect(json['total_price']).to eq(8.98) # 2*1.99 + 1*5.0
+      end
+    end
   end
 
-  describe "POST /add_items" do
-    let(:cart) { Cart.create }
-    let(:product) { Product.create(name: "Test Product", price: 10.0) }
-    let!(:cart_item) { CartItem.create(cart: cart, product: product, quantity: 1) }
+  describe "POST /cart/add_item" do
+    let(:product) { create(:product, name: "Test Product", price: 10.0) }
 
-    context 'when the product already is in the cart' do
-      subject do
-        post '/cart/add_item', params: { product_id: product.id, quantity: 1 }, as: :json
+    context 'when cart exists in session' do
+      before do
+        post '/cart', params: { product_id: product.id, quantity: 1 }, as: :json
+        post '/cart/add_item', params: { product_id: product.id, quantity: 2 }, as: :json
+      end
+
+      it 'returns status 200' do
+        expect(response).to have_http_status(:ok)
+      end
+
+      it 'updates quantity of existing product in cart' do
+        json = response.parsed_body
+        expect(json['products'].size).to eq(1)
+        expect(json['products'].first['quantity']).to eq(3)
+        expect(json['total_price']).to eq(30.0)
+      end
+    end
+
+    context 'when no cart in session' do
+      before do
         post '/cart/add_item', params: { product_id: product.id, quantity: 1 }, as: :json
       end
 
-      it 'updates the quantity of the existing item in the cart' do
-        expect { subject }.to change { cart_item.reload.quantity }.by(2)
+      it 'returns status 404' do
+        expect(response).to have_http_status(:not_found)
+      end
+
+      it 'returns error message' do
+        json = response.parsed_body
+        expect(json['errors']).to include('Carrinho não encontrado')
+      end
+    end
+
+    context 'when params are missing' do
+      before do
+        post '/cart', params: { product_id: product.id, quantity: 1 }, as: :json
+        post '/cart/add_item', params: { quantity: 1 }, as: :json
+      end
+
+      it 'returns status 422' do
+        expect(response).to have_http_status(:unprocessable_entity)
+      end
+
+      it 'returns errors' do
+        json = response.parsed_body
+        expect(json['errors']).to be_present
+      end
+    end
+  end
+
+  describe "DELETE /cart/:product_id" do
+    let(:product) { create(:product, name: "Produto X", price: 15.0) }
+
+    context 'when cart exists and product is in cart' do
+      before do
+        post '/cart', params: { product_id: product.id, quantity: 2 }, as: :json
+        delete "/cart/#{product.id}"
+      end
+
+      it 'returns status 200' do
+        expect(response).to have_http_status(:ok)
+      end
+
+      it 'removes one unit (unitary removal by default)' do
+        json = response.parsed_body
+        expect(json['products'].size).to eq(1)
+        expect(json['products'].first['quantity']).to eq(1)
+        expect(json['total_price']).to eq(15.0)
+      end
+    end
+
+    context 'when removing last unit (cart becomes empty)' do
+      before do
+        post '/cart', params: { product_id: product.id, quantity: 1 }, as: :json
+        delete "/cart/#{product.id}"
+      end
+
+      it 'returns status 200' do
+        expect(response).to have_http_status(:ok)
+      end
+
+      it 'returns cart with empty products' do
+        json = response.parsed_body
+        expect(json['products']).to eq([])
+        expect(json['total_price']).to eq(0)
+      end
+    end
+
+    context 'when product not in cart' do
+      let(:other_product) { create(:product, name: "Outro", price: 5.0) }
+
+      before do
+        post '/cart', params: { product_id: product.id, quantity: 1 }, as: :json
+        delete "/cart/#{other_product.id}"
+      end
+
+      it 'returns status 404' do
+        expect(response).to have_http_status(:not_found)
+      end
+
+      it 'returns error message' do
+        json = response.parsed_body
+        expect(json['errors']).to include('Produto não encontrado no carrinho')
+      end
+    end
+
+    context 'when no cart in session' do
+      before { delete "/cart/#{product.id}" }
+
+      it 'returns status 404' do
+        expect(response).to have_http_status(:not_found)
+      end
+
+      it 'returns cart not found error' do
+        json = response.parsed_body
+        expect(json['errors']).to include('Carrinho não encontrado')
+      end
+    end
+
+    context 'when remove_all is true' do
+      before do
+        post '/cart', params: { product_id: product.id, quantity: 3 }, as: :json
+        delete "/cart/#{product.id}?remove_all=true"
+      end
+
+      it 'returns status 200 with empty products' do
+        expect(response).to have_http_status(:ok)
+        json = response.parsed_body
+        expect(json['products']).to eq([])
+        expect(json['total_price']).to eq(0)
       end
     end
   end
