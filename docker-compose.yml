@@ -25,7 +25,8 @@ services:
             - .:/rails
         depends_on:
             - db
-            - redis 
+            - redis
+            - sidekiq
         environment:
             - DATABASE_URL=postgresql://postgres:password@db:5432/myapp_development
             - REDIS_URL=redis://redis:6379/0
@@ -40,6 +41,17 @@ services:
             - DATABASE_URL=postgresql://postgres:password@db:5432/myapp_test
             - REDIS_URL=redis://redis:6379/0
             - RAILS_ENV=test
+    sidekiq:
+        build: .
+        command: bundle exec sidekiq -C config/sidekiq.yml
+        volumes:
+            - .:/rails
+        depends_on:
+            - db
+            - redis
+        environment:
+            - DATABASE_URL=postgresql://postgres:password@db:5432/myapp_development
+            - REDIS_URL=redis://redis:6379/0
 volumes:
     postgres13:
     redis_data:
