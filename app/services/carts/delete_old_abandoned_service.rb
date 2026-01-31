@@ -1,12 +1,12 @@
 module Carts
   class DeleteOldAbandonedService
-    CART_DELETION_THRESHOLD = ENV.fetch('CART_DELETION_THRESHOLD', 7).to_i.days
+    CART_DELETION_THRESHOLD_DAYS = ENV.fetch('CART_DELETION_THRESHOLD_DAYS', 7).to_i.days
 
-    def self.call(older_than: CART_DELETION_THRESHOLD)
+    def self.call(older_than: CART_DELETION_THRESHOLD_DAYS)
       new.call(older_than: older_than)
     end
 
-    def call(older_than: CART_DELETION_THRESHOLD)
+    def call(older_than: CART_DELETION_THRESHOLD_DAYS)
       cutoff = older_than.ago
       carts_to_delete = Cart.abandoned.where('updated_at < ?', cutoff)
       mode = deletion_mode

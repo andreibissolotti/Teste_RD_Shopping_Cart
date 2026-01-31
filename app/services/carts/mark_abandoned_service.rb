@@ -1,12 +1,12 @@
 module Carts
   class MarkAbandonedService
-    INACTIVITY_THRESHOLD = ENV.fetch('INACTIVITY_THRESHOLD', 3).to_i.hours
+    INACTIVITY_THRESHOLD_HOURS = ENV.fetch('INACTIVITY_THRESHOLD_HOURS', 3).to_i.hours
 
-    def self.call(threshold: INACTIVITY_THRESHOLD)
+    def self.call(threshold: INACTIVITY_THRESHOLD_HOURS)
       new.call(threshold: threshold)
     end
 
-    def call(threshold: INACTIVITY_THRESHOLD)
+    def call(threshold: INACTIVITY_THRESHOLD_HOURS)
       cutoff = threshold.ago
       carts_to_mark = Cart.active.where(
         'last_interaction_at < ? OR (last_interaction_at IS NULL AND updated_at < ?)',

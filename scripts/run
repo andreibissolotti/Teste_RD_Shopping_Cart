@@ -50,10 +50,6 @@ case "${1:-}" in
       exec $DOCKER_COMPOSE run --rm web "$shell" -c "$*"
     fi
     ;;
-  install)
-    shift
-    set -- bundle install "$@"
-    ;;
 esac
 
 # Sem argumentos → inicia a aplicação
