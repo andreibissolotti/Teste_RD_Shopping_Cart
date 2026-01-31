@@ -2,6 +2,8 @@
 
 Documentação dos jobs assíncronos que marcam carrinhos como abandonados e excluem os abandonados há mais de 7 dias. O gerenciamento e a execução manual dos jobs são feitos pelo **painel do Sidekiq** (`/sidekiq`).
 
+**Diagramas:** fluxo dos jobs e ciclo de vida do carrinho em [docs/DIAGRAMS.md](DIAGRAMS.md) (Mermaid).
+
 ---
 
 ## Visão geral

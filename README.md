@@ -153,3 +153,4 @@ bundle exec rspec
 | [docs/TEST_DESCRIPTION.md](docs/TEST_DESCRIPTION.md) | Descrição completa do desafio técnico |
 | [docs/API.md](docs/API.md) | Documentação da API (endpoints, payloads, erros) |
 | [docs/ABANDONED_CARTS_JOBS.md](docs/ABANDONED_CARTS_JOBS.md) | Jobs de carrinhos abandonados e configuração |
+| [docs/DIAGRAMS.md](docs/DIAGRAMS.md) | Diagramas de funcionalidade (Mermaid): fluxos do carrinho, estados e jobs |

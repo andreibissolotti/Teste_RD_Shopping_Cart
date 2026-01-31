@@ -4,6 +4,8 @@ API REST para gerenciamento de produtos e carrinho de compras. Todas as resposta
 
 **Documentação interativa (Swagger UI):** com a aplicação rodando, acesse [http://localhost:3000/api-docs](http://localhost:3000/api-docs) para explorar e testar os endpoints. O OpenAPI é gerado a partir dos specs em `spec/requests/api_docs/` (gem [rswag](https://github.com/rswag/rswag)); para regenerar: `./scripts/run rswag` ou `rake rswag:specs:swaggerize`.
 
+**Diagramas de funcionalidade:** fluxos do carrinho, estados e jobs em [docs/DIAGRAMS.md](DIAGRAMS.md) (Mermaid).
+
 ---
 
 ## Base URL
