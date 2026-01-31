@@ -1,6 +1,6 @@
 module Carts
   class MarkAbandonedService
-    INACTIVITY_THRESHOLD = 3.hours
+    INACTIVITY_THRESHOLD = ENV.fetch('INACTIVITY_THRESHOLD', 3).to_i.hours
 
     def self.call(threshold: INACTIVITY_THRESHOLD)
       new.call(threshold: threshold)

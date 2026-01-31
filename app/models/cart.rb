@@ -1,6 +1,4 @@
 class Cart < ApplicationRecord
-  INACTIVITY_THRESHOLD = 3.hours
-  DELETION_THRESHOLD = 7.days
 
   validates_numericality_of :total_price, greater_than_or_equal_to: 0
   has_many :cart_products, dependent: :destroy
@@ -23,11 +21,12 @@ class Cart < ApplicationRecord
     save!
   end
 
-  def remove_if_abandoned
-    return unless status == 'abandoned'
-    return unless last_interaction_at < DELETION_THRESHOLD.ago
-
-    delete!
+  def delete_cart(mode: 'soft')
+    return false unless status == 'abandoned'
+    delete!(mode)
+    true
+  rescue ActiveRecord::RecordNotDestroyed
+    false
   end
 
   private
@@ -36,8 +35,8 @@ class Cart < ApplicationRecord
     self.total_price ||= 0
   end
 
-  def delete!
-    if ENV['CART_DELETION_MODE'] == 'hard'
+  def delete!(mode)
+    if mode == 'hard'
       destroy!
     else
       self.status = 'deleted'
