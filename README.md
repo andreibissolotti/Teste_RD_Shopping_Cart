@@ -25,6 +25,8 @@ O carrinho é vinculado à sessão (cookies). A API também expõe CRUD de **pro
 
 **Documentação completa da API:** [docs/API.md](docs/API.md)
 
+**Documentação interativa (Swagger UI):** com a aplicação rodando, acesse **http://localhost:3000/api-docs** para explorar e testar os endpoints. Para regenerar o OpenAPI após alterar os specs do rswag: `./scripts/run rswag`.
+
 ---
 
 ## Sidekiq e carrinhos abandonados
@@ -98,6 +100,7 @@ Sobe os serviços `web`, `sidekiq`, `db` e `redis`. A API fica disponível em **
 | `./scripts/run console` | Abre o Rails console |
 | `./scripts/run rails <comando>` | Executa comandos Rails (ex: `rails db:migrate`) |
 | `./scripts/run rake <tarefa>` | Executa tarefas Rake |
+| `./scripts/run rswag` | Gera o OpenAPI (Swagger) a partir dos specs em `spec/requests/api_docs/` |
 | `./scripts/run bash` | Abre shell no container web |
 
 ---

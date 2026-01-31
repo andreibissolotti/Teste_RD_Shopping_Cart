@@ -41,6 +41,9 @@ case "${1:-}" in
     shift
     set -- bundle exec rake "$@"
     ;;
+  rswag)
+    exec $DOCKER_COMPOSE run --rm test bundle exec rake rswag:specs:swaggerize
+    ;;
   bash|sh)
     shell="${1}"
     shift

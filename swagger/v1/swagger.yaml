@@ -1,0 +1,183 @@
+---
+openapi: 3.0.1
+info:
+  title: API Carrinho de Compras
+  version: v1
+  description: API REST para gerenciamento de produtos e carrinho de compras (e-commerce).
+paths:
+  "/cart":
+    get:
+      summary: Lista itens do carrinho atual
+      tags:
+      - Carrinho
+      description: Retorna o carrinho vinculado à sessão. Requer cookie de sessão
+        com carrinho criado.
+      responses:
+        '200':
+          description: carrinho encontrado
+        '404':
+          description: carrinho não encontrado
+    post:
+      summary: Cria carrinho ou adiciona produto ao carrinho
+      tags:
+      - Carrinho
+      parameters: []
+      responses:
+        '201':
+          description: carrinho criado ou produto adicionado
+        '404':
+          description: produto não encontrado
+        '422':
+          description: parâmetros inválidos
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                product_id:
+                  type: integer
+                  description: ID do produto
+                quantity:
+                  type: integer
+                  description: Quantidade
+              required:
+              - product_id
+              - quantity
+  "/cart/add_item":
+    post:
+      summary: Adiciona ou atualiza quantidade de produto no carrinho
+      tags:
+      - Carrinho
+      parameters: []
+      responses:
+        '200':
+          description: item adicionado ou quantidade atualizada
+        '404':
+          description: carrinho não encontrado
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                product_id:
+                  type: integer
+                quantity:
+                  type: integer
+              required:
+              - product_id
+              - quantity
+  "/cart/{product_id}":
+    parameters:
+    - name: product_id
+      in: path
+      description: ID do produto a remover
+      required: true
+      schema:
+        type: integer
+    - name: remove_all
+      in: query
+      required: false
+      description: Se true, remove todas as unidades do produto
+      schema:
+        type: boolean
+    delete:
+      summary: Remove produto do carrinho
+      tags:
+      - Carrinho
+      responses:
+        '200':
+          description: todas as unidades removidas com remove_all=true
+        '404':
+          description: carrinho ou produto não encontrado
+  "/products":
+    get:
+      summary: Lista todos os produtos
+      tags:
+      - Produtos
+      responses:
+        '200':
+          description: lista de produtos
+    post:
+      summary: Cria um produto
+      tags:
+      - Produtos
+      parameters: []
+      responses:
+        '201':
+          description: produto criado
+        '422':
+          description: requisição inválida
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                product:
+                  type: object
+                  properties:
+                    name:
+                      type: string
+                    price:
+                      type: number
+                  required:
+                  - name
+                  - price
+              required:
+              - product
+  "/products/{id}":
+    parameters:
+    - name: id
+      in: path
+      description: ID do produto
+      required: true
+      schema:
+        type: integer
+    get:
+      summary: Retorna um produto
+      tags:
+      - Produtos
+      responses:
+        '200':
+          description: produto encontrado
+        '404':
+          description: produto não encontrado
+    patch:
+      summary: Atualiza um produto
+      tags:
+      - Produtos
+      parameters: []
+      responses:
+        '200':
+          description: produto atualizado
+        '422':
+          description: requisição inválida
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                product:
+                  type: object
+                  properties:
+                    name:
+                      type: string
+                    price:
+                      type: number
+    delete:
+      summary: Remove um produto
+      tags:
+      - Produtos
+      responses:
+        '204':
+          description: produto removido
+        '404':
+          description: produto não encontrado
+servers:
+- url: http://{defaultHost}
+  variables:
+    defaultHost:
+      default: localhost:3000
