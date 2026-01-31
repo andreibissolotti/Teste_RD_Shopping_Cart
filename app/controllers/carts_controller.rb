@@ -1,10 +1,9 @@
 class CartsController < ApplicationController
-  before_action :set_cart, only: [:show, :destroy]
-
-  def index
-  end
-
   def show
+    return render_cart_not_found unless current_cart
+
+    body = Carts::CartBaseSerializer.new.serialize_cart(current_cart)
+    render json: body, status: :ok
   end
 
   def create
@@ -16,9 +15,23 @@ class CartsController < ApplicationController
   end
 
   def add_item
+    return render_cart_not_found unless current_cart
+
+    result = CartProducts::AddOrUpdateService.call(current_cart, add_item_params)
+    response = Carts::CartResultSerializer.call(result)
+    render json: response[:body], status: response[:status]
   end
 
-  def destroy
+  def remove_product
+    return render_cart_not_found unless current_cart
+
+    result = Carts::RemoveProductService.call(
+      current_cart,
+      params[:product_id],
+      remove_all: ActiveModel::Type::Boolean.new.cast(params[:remove_all])
+    )
+    response = Carts::CartResultSerializer.call(result)
+    render json: response[:body], status: response[:status]
   end
 
   private
@@ -30,5 +43,13 @@ class CartsController < ApplicationController
 
   def create_cart_params
     params.permit(:product_id, :quantity)
+  end
+
+  def add_item_params
+    params.permit(:product_id, :quantity)
+  end
+
+  def render_cart_not_found
+    render json: { errors: ['Carrinho não encontrado'] }, status: :not_found
   end
 end
