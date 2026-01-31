@@ -9,21 +9,77 @@ RSpec.describe Cart, type: :model do
     end
   end
 
-  describe 'mark_as_abandoned' do
-    let(:shopping_cart) { create(:shopping_cart) }
+  describe 'scopes' do
+    it 'active returns carts with status active' do
+      create(:cart, status: 'active')
+      create(:cart, status: 'abandoned')
+      create(:cart, status: 'deleted')
+      expect(Cart.active.count).to eq(1)
+    end
 
-    it 'marks the shopping cart as abandoned if inactive for a certain time' do
-      shopping_cart.update(last_interaction_at: 3.hours.ago)
-      expect { shopping_cart.mark_as_abandoned }.to change { shopping_cart.abandoned? }.from(false).to(true)
+    it 'abandoned returns carts with status abandoned' do
+      create(:cart, status: 'active')
+      create(:cart, status: 'abandoned')
+      create(:cart, status: 'deleted')
+      expect(Cart.abandoned.count).to eq(1)
+    end
+
+    it 'not_deleted excludes carts with status deleted' do
+      create(:cart, status: 'active')
+      create(:cart, status: 'abandoned')
+      create(:cart, status: 'deleted')
+      expect(Cart.not_deleted.count).to eq(2)
+    end
+  end
+
+  describe '#mark_as_abandoned!' do
+    it 'changes status from active to abandoned' do
+      cart = create(:cart, status: 'active')
+      cart.mark_as_abandoned!
+      expect(cart.reload.status).to eq('abandoned')
+    end
+
+    it 'persists the change' do
+      cart = create(:cart, status: 'active')
+      cart.mark_as_abandoned!
+      expect(Cart.abandoned.find(cart.id)).to eq(cart)
+    end
+
+    it 'keeps status abandoned when already abandoned' do
+      cart = create(:cart, status: 'abandoned')
+      cart.mark_as_abandoned!
+      expect(cart.reload.status).to eq('abandoned')
+    end
+  end
+
+  describe '#record_interaction!' do
+    it 'updates last_interaction_at to current time' do
+      cart = create(:cart, last_interaction_at: 2.days.ago)
+      before_time = Time.current
+      cart.record_interaction!
+      after_time = Time.current
+      expect(cart.reload.last_interaction_at).to be_between(before_time, after_time)
+    end
+
+    it 'changes status from abandoned to active when cart is abandoned' do
+      cart = create(:cart, status: 'abandoned')
+      cart.record_interaction!
+      expect(cart.reload.status).to eq('active')
+    end
+
+    it 'keeps status active when cart is already active' do
+      cart = create(:cart, status: 'active')
+      cart.record_interaction!
+      expect(cart.reload.status).to eq('active')
     end
   end
 
   describe 'remove_if_abandoned' do
-    let(:shopping_cart) { create(:shopping_cart, last_interaction_at: 7.days.ago) }
+    let(:shopping_cart) { create(:cart, last_interaction_at: 7.days.ago) }
 
     it 'removes the shopping cart if abandoned for a certain time' do
-      shopping_cart.mark_as_abandoned
-      expect { shopping_cart.remove_if_abandoned }.to change { Cart.count }.by(-1)
+      shopping_cart.mark_as_abandoned!
+      expect { shopping_cart.remove_if_abandoned }.to change { Cart.not_deleted.count }.by(-1)
     end
   end
 
