@@ -85,6 +85,17 @@ RSpec.describe CartProducts::AddOrUpdateService do
       end
     end
 
+    context 'when quantity is invalid (zero or negative)' do
+      let(:invalid_params) { { product_id: product.id, quantity: -1 } }
+
+      it 'returns errors with status unprocessable_entity' do
+        result = described_class.call(cart, invalid_params)
+
+        expect(result[:status]).to eq(:unprocessable_entity)
+        expect(result[:errors]).to include('Quantidade deve ser maior que 0')
+      end
+    end
+
     context 'when params is nil' do
       it 'returns errors with status unprocessable_entity' do
         result = described_class.call(cart, nil)

@@ -1,3 +1,5 @@
+require_relative 'errors'
+
 module CartProducts
   class AddOrUpdateService
     def self.call(cart, params)
@@ -25,7 +27,7 @@ module CartProducts
       { cart: cart, cart_product: cart_product, status: :ok }
     rescue ActiveRecord::RecordNotFound => e
       { errors: [e.message], status: :not_found }
-    rescue ActiveRecord::RecordInvalid, MissingParameterError => e
+    rescue ActiveRecord::RecordInvalid, MissingParameterError, QuantityInvalidError => e
       { errors: [e.message], status: :unprocessable_entity }
     rescue ActiveRecord::StatementInvalid => e
       Rails.logger.error(e.message)
@@ -43,6 +45,7 @@ module CartProducts
       params = params.to_h.deep_symbolize_keys
 
       raise MissingParameterError, "quantity" if params[:quantity].blank?
+      raise QuantityInvalidError if params[:quantity].to_i <= 0
       raise MissingParameterError, "product_id" if params[:product_id].blank?
 
       params
