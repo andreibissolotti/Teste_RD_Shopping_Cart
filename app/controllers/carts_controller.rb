@@ -2,6 +2,7 @@ class CartsController < ApplicationController
   def show
     return render_cart_not_found unless current_cart
 
+    current_cart.record_interaction!
     body = Carts::CartBaseSerializer.new.serialize_cart(current_cart)
     render json: body, status: :ok
   end
@@ -10,7 +11,10 @@ class CartsController < ApplicationController
     result = Carts::CreateService.call(current_cart, create_cart_params)
     response = Carts::CreateSerializer.call(result)
 
-    session[:cart_id] = result[:cart].id if result[:status] == :created
+    if result[:status] == :created
+      session[:cart_id] = result[:cart].id
+      result[:cart].record_interaction!
+    end
     render json: response[:body], status: response[:status]
   end
 
@@ -18,6 +22,7 @@ class CartsController < ApplicationController
     return render_cart_not_found unless current_cart
 
     result = CartProducts::AddOrUpdateService.call(current_cart, add_item_params)
+    result[:cart].record_interaction! if result[:status] == :ok
     response = Carts::CartResultSerializer.call(result)
     render json: response[:body], status: response[:status]
   end
@@ -30,6 +35,7 @@ class CartsController < ApplicationController
       params[:product_id],
       remove_all: ActiveModel::Type::Boolean.new.cast(params[:remove_all])
     )
+    result[:cart].record_interaction! if result[:status] == :ok
     response = Carts::CartResultSerializer.call(result)
     render json: response[:body], status: response[:status]
   end
@@ -38,7 +44,7 @@ class CartsController < ApplicationController
 
   def current_cart
     return nil unless session[:cart_id].present?
-    Cart.find_by(id: session[:cart_id])
+    Cart.not_deleted.find_by(id: session[:cart_id])
   end
 
   def create_cart_params

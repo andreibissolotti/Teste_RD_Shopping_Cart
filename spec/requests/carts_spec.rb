@@ -34,6 +34,48 @@ RSpec.describe "/cart", type: :request do
         expect(json['errors']).to include('Carrinho não encontrado')
       end
     end
+
+    context 'when cart in session has status deleted' do
+      let(:product) { create(:product) }
+
+      before do
+        post '/cart', params: { product_id: product.id, quantity: 1 }, as: :json
+        Cart.last.update!(status: 'deleted')
+        get '/cart'
+      end
+
+      it 'returns status 404' do
+        expect(response).to have_http_status(:not_found)
+      end
+
+      it 'returns cart not found error' do
+        json = response.parsed_body
+        expect(json['errors']).to include('Carrinho não encontrado')
+      end
+    end
+
+    context 'record_interaction' do
+      let(:product) { create(:product, price: 10.0) }
+
+      it 'updates last_interaction_at on successful show' do
+        post '/cart', params: { product_id: product.id, quantity: 1 }, as: :json
+        cart = Cart.last
+        cart.update_columns(last_interaction_at: 5.hours.ago)
+
+        get '/cart'
+
+        expect(cart.reload.last_interaction_at).to be > 5.hours.ago
+      end
+
+      it 'reactivates abandoned cart on successful show' do
+        post '/cart', params: { product_id: product.id, quantity: 1 }, as: :json
+        Cart.last.update!(status: 'abandoned')
+
+        get '/cart'
+
+        expect(Cart.last.reload.status).to eq('active')
+      end
+    end
   end
 
   describe "POST /cart" do
@@ -174,6 +216,23 @@ RSpec.describe "/cart", type: :request do
       end
     end
 
+    context 'when cart in session has status deleted' do
+      before do
+        post '/cart', params: { product_id: product.id, quantity: 1 }, as: :json
+        Cart.last.update!(status: 'deleted')
+        post '/cart/add_item', params: { product_id: product.id, quantity: 1 }, as: :json
+      end
+
+      it 'returns status 404' do
+        expect(response).to have_http_status(:not_found)
+      end
+
+      it 'returns cart not found error' do
+        json = response.parsed_body
+        expect(json['errors']).to include('Carrinho não encontrado')
+      end
+    end
+
     context 'when params are missing' do
       before do
         post '/cart', params: { product_id: product.id, quantity: 1 }, as: :json
@@ -249,6 +308,23 @@ RSpec.describe "/cart", type: :request do
 
     context 'when no cart in session' do
       before { delete "/cart/#{product.id}" }
+
+      it 'returns status 404' do
+        expect(response).to have_http_status(:not_found)
+      end
+
+      it 'returns cart not found error' do
+        json = response.parsed_body
+        expect(json['errors']).to include('Carrinho não encontrado')
+      end
+    end
+
+    context 'when cart in session has status deleted' do
+      before do
+        post '/cart', params: { product_id: product.id, quantity: 1 }, as: :json
+        Cart.last.update!(status: 'deleted')
+        delete "/cart/#{product.id}"
+      end
 
       it 'returns status 404' do
         expect(response).to have_http_status(:not_found)
