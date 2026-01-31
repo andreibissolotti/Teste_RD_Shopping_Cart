@@ -8,9 +8,10 @@ class CartsController < ApplicationController
   end
 
   def create
-    result = Carts::CreateService.call(create_cart_params)
+    result = Carts::CreateService.call(current_cart, create_cart_params)
     response = Carts::CreateSerializer.call(result)
 
+    session[:cart_id] = result[:cart].id if result[:status] == :created
     render json: response[:body], status: response[:status]
   end
 
@@ -21,6 +22,11 @@ class CartsController < ApplicationController
   end
 
   private
+
+  def current_cart
+    return nil unless session[:cart_id].present?
+    Cart.find_by(id: session[:cart_id])
+  end
 
   def create_cart_params
     params.permit(:product_id, :quantity)

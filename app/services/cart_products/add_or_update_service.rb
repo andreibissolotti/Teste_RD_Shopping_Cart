@@ -25,7 +25,7 @@ module CartProducts
       { cart: cart, cart_product: cart_product, status: :ok }
     rescue ActiveRecord::RecordNotFound => e
       { errors: [e.message], status: :not_found }
-    rescue ActiveRecord::RecordInvalid, CreateService::MissingParameterError => e
+    rescue ActiveRecord::RecordInvalid, MissingParameterError => e
       { errors: [e.message], status: :unprocessable_entity }
     rescue ActiveRecord::StatementInvalid => e
       Rails.logger.error(e.message)
@@ -38,12 +38,12 @@ module CartProducts
     private
 
     def validate_params(params)
-      raise CreateService::MissingParameterError, "params" if params.blank?
+      raise MissingParameterError, "params" if params.blank?
 
       params = params.to_h.deep_symbolize_keys
 
-      raise CreateService::MissingParameterError, "quantity" if params[:quantity].blank?
-      raise CreateService::MissingParameterError, "product_id" if params[:product_id].blank?
+      raise MissingParameterError, "quantity" if params[:quantity].blank?
+      raise MissingParameterError, "product_id" if params[:product_id].blank?
 
       params
     end

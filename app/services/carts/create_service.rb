@@ -1,25 +1,39 @@
 module Carts
   class CreateService
-    def self.call(params)
-      errors = []
+    def self.call(cart_or_nil, params)
+      new.call(cart_or_nil, params)
+    end
+
+    def call(cart_or_nil, params)
+      if cart_or_nil.present?
+        add_to_cart(cart_or_nil, params)
+      else
+        create_cart_and_add(params)
+      end
+    end
+
+    private
+
+    def add_to_cart(cart, params)
+      result = CartProducts::AddOrUpdateService.call(cart, params)
+      result[:status] == :ok ? success_result(result) : result
+    end
+
+    def create_cart_and_add(params)
+      result = nil
+      cart = nil
 
       ActiveRecord::Base.transaction do
-        @cart = Cart.create!
-        @cart_product = CartProducts::CreateService.call(@cart, params)
-        @cart.update!(total_price: @cart_product.total_price)
+        cart = Cart.create!
+        result = CartProducts::AddOrUpdateService.call(cart, params)
+        raise ActiveRecord::Rollback if result[:status] != :ok
       end
 
-      return { cart: @cart, cart_product: @cart_product, errors: errors, status: :created }
-    rescue ActiveRecord::RecordNotFound => e
-      return { errors: [e.message], status: :not_found }
-    rescue ActiveRecord::RecordInvalid, CartProducts::CreateService::MissingParameterError => e
-      return { errors: [e.message], status: :unprocessable_entity }
-    rescue ActiveRecord::StatementInvalid => e
-      Rails.logger.error(e.message)
-      return { errors: [e.message], status: :internal_server_error }
-    rescue => e
-      Rails.logger.error(e.message)
-      return { errors: [e.message], status: :internal_server_error }
+      result[:status] == :ok ? success_result(result) : result
+    end
+
+    def success_result(result)
+      { cart: result[:cart], cart_product: result[:cart_product], errors: [], status: :created }
     end
   end
 end

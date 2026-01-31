@@ -1,12 +1,12 @@
 require 'rails_helper'
 
-RSpec.describe "/carts", type: :request do
-  describe "POST /carts" do
+RSpec.describe "/cart", type: :request do
+  describe "POST /cart" do
     let(:product) { create(:product, name: "Produto Teste", price: 1.99) }
 
     context 'when parameters are valid' do
       before do
-        post '/carts', params: { product_id: product.id, quantity: 2 }, as: :json
+        post '/cart', params: { product_id: product.id, quantity: 2 }, as: :json
       end
 
       it 'returns status 201' do
@@ -39,7 +39,7 @@ RSpec.describe "/carts", type: :request do
 
     context 'when product does not exist' do
       before do
-        post '/carts', params: { product_id: 99999, quantity: 1 }, as: :json
+        post '/cart', params: { product_id: 99999, quantity: 1 }, as: :json
       end
 
       it 'returns status 404' do
@@ -55,7 +55,7 @@ RSpec.describe "/carts", type: :request do
 
     context 'when params are missing' do
       before do
-        post '/carts', params: { quantity: 1 }, as: :json
+        post '/cart', params: { quantity: 1 }, as: :json
       end
 
       it 'returns status 422' do
@@ -70,7 +70,7 @@ RSpec.describe "/carts", type: :request do
 
     context 'when quantity is invalid' do
       before do
-        post '/carts', params: { product_id: product.id, quantity: -1 }, as: :json
+        post '/cart', params: { product_id: product.id, quantity: -1 }, as: :json
       end
 
       it 'returns status 422' do
@@ -91,8 +91,8 @@ RSpec.describe "/carts", type: :request do
 
     context 'when the product already is in the cart' do
       subject do
-        post '/carts/add_item', params: { product_id: product.id, quantity: 1 }, as: :json
-        post '/carts/add_item', params: { product_id: product.id, quantity: 1 }, as: :json
+        post '/cart/add_item', params: { product_id: product.id, quantity: 1 }, as: :json
+        post '/cart/add_item', params: { product_id: product.id, quantity: 1 }, as: :json
       end
 
       it 'updates the quantity of the existing item in the cart' do

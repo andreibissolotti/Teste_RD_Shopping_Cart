@@ -2,20 +2,20 @@ require "rails_helper"
 
 RSpec.describe CartsController, type: :routing do
   describe 'routes' do
-    it 'routes to #index' do
-      expect(get: '/carts').to route_to('carts#index')
+    it 'routes to #show' do
+      expect(get: '/cart').to route_to('carts#show')
     end
 
-    it 'routes to #show' do
-      expect(get: '/carts/:id').to route_to('carts#show', id: ':id')
-    end 
-
     it 'routes to #create' do
-      expect(post: '/carts').to route_to('carts#create')
+      expect(post: '/cart').to route_to('carts#create')
     end
 
     it 'routes to #add_item via POST' do
-      expect(post: '/carts/add_item').to route_to('carts#add_item')
+      expect(post: '/cart/add_item').to route_to('carts#add_item')
+    end
+
+    it 'routes to #remove_product via DELETE' do
+      expect(delete: '/cart/123').to route_to('carts#remove_product', product_id: '123')
     end
   end
 end 
